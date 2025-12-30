@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix Film Slider</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #141414;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        h2 {
+            color: #fff;
+            font-size: 22px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .slider-wrapper {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .slider {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 10px 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .slider::-webkit-scrollbar {
+            display: none;
+        }
+
+        .movie-card {
+            min-width: 140px;
+            width: 140px;
+            background: #2f2f2f;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            z-index: 10;
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .movie-info {
+            padding: 10px;
+        }
+
+        .movie-title {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .movie-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #999;
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            color: #46d369;
+        }
+
+        .year {
+            color: #999;
+        }
+
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 20;
+            transition: background 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(0,0,0,0.9);
+        }
+
+        .nav-btn.prev {
+            left: 0;
+        }
+
+        .nav-btn.next {
+            right: 0;
+        }
+
+        @media (max-width: 768px) {
+            .movie-card {
+                min-width: 120px;
+                width: 120px;
+            }
+
+            .movie-poster {
+                height: 170px;
+            }
+
+            h2 {
+                font-size: 18px;
+            }
+
+            .nav-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .movie-card {
+                min-width: 110px;
+                width: 110px;
+            }
+
+            .movie-poster {
+                height: 160px;
+            }
+
+            .movie-info {
+                padding: 8px;
+            }
+
+            .movie-title {
+                font-size: 12px;
+            }
+
+            .container {
+                padding: 0 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="slider-wrapper">
+            <h2>🔥 Popüler Filmler</h2>
+            <button class="nav-btn prev" onclick="scroll('popular', -1)">‹</button>
+            <div class="slider" id="popular">
+                <!-- Film kartları dinamik olarak eklenecek -->
+            </div>
+            <button class="nav-btn next" onclick="scroll('popular', 1)">›</button>
+        </div>
+
+        <div class="slider-wrapper">
+            <h2>⭐ En Çok İzlenenler</h2>
+            <button class="nav-btn prev" onclick="scroll('trending', -1)">‹</button>
+            <div class="slider" id="trending">
+                <!-- Film kartları dinamik olarak eklenecek -->
+            </div>
+            <button class="nav-btn next" onclick="scroll('trending', 1)">›</button>
+        </div>
+
+        <div class="slider-wrapper">
+            <h2>🎬 Aksiyon Filmleri</h2>
+            <button class="nav-btn prev" onclick="scroll('action', -1)">‹</button>
+            <div class="slider" id="action">
+                <!-- Film kartları dinamik olarak eklenecek -->
+            </div>
+            <button class="nav-btn next" onclick="scroll('action', 1)">›</button>
+        </div>
+    </div>
+
+    <script>
+        const movies = {
+            popular: [
+                { title: "Inception", year: "2010", rating: "8.8", poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&h=450&fit=crop", videoUrl: "https://example.com/inception.mp4" },
+                { title: "The Matrix", year: "1999", rating: "8.7", poster: "https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=300&h=450&fit=crop", videoUrl: "https://example.com/matrix.m3u" },
+                { title: "Interstellar", year: "2014", rating: "8.6", poster: "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=300&h=450&fit=crop", videoUrl: "https://example.com/interstellar.mp4" },
+                { title: "The Dark Knight", year: "2008", rating: "9.0", poster: "https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=300&h=450&fit=crop", videoUrl: "https://example.com/darkknight.m3u" },
+                { title: "Pulp Fiction", year: "1994", rating: "8.9", poster: "https://images.unsplash.com/photo-1574267432644-f610a4ab7463?w=300&h=450&fit=crop", videoUrl: "https://example.com/pulpfiction.mp4" },
+                { title: "Fight Club", year: "1999", rating: "8.8", poster: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=300&h=450&fit=crop", videoUrl: "https://example.com/fightclub.mp4" },
+                { title: "Forrest Gump", year: "1994", rating: "8.8", poster: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&h=450&fit=crop", videoUrl: "https://example.com/forrestgump.m3u" },
+                { title: "The Godfather", year: "1972", rating: "9.2", poster: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=300&h=450&fit=crop", videoUrl: "https://example.com/godfather.mp4" }
+            ],
+            trending: [
+                { title: "Dune", year: "2021", rating: "8.0", poster: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=450&fit=crop", videoUrl: "https://example.com/dune.mp4" },
+                { title: "Oppenheimer", year: "2023", rating: "8.5", poster: "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=300&h=450&fit=crop", videoUrl: "https://example.com/oppenheimer.m3u" },
+                { title: "Avatar", year: "2022", rating: "7.8", poster: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300&h=450&fit=crop", videoUrl: "https://example.com/avatar.mp4" },
+                { title: "Top Gun", year: "2022", rating: "8.3", poster: "https://images.unsplash.com/photo-1517976487492-5750f3195933?w=300&h=450&fit=crop", videoUrl: "https://example.com/topgun.mp4" },
+                { title: "Barbie", year: "2023", rating: "7.1", poster: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=300&h=450&fit=crop", videoUrl: "https://example.com/barbie.m3u" },
+                { title: "Killers Flower", year: "2023", rating: "7.7", poster: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=450&fit=crop", videoUrl: "https://example.com/killers.mp4" },
+                { title: "Spider-Man", year: "2021", rating: "8.7", poster: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=300&h=450&fit=crop", videoUrl: "https://example.com/spiderman.m3u" },
+                { title: "Everything", year: "2022", rating: "7.8", poster: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=300&h=450&fit=crop", videoUrl: "https://example.com/everything.mp4" }
+            ],
+            action: [
+                { title: "John Wick 4", year: "2023", rating: "7.8", poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&h=450&fit=crop", videoUrl: "https://example.com/johnwick4.mp4" },
+                { title: "Mad Max", year: "2015", rating: "8.1", poster: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=300&h=450&fit=crop", videoUrl: "https://example.com/madmax.m3u" },
+                { title: "Gladiator", year: "2000", rating: "8.5", poster: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&h=450&fit=crop", videoUrl: "https://example.com/gladiator.mp4" },
+                { title: "Die Hard", year: "1988", rating: "8.2", poster: "https://images.unsplash.com/photo-1574267432644-f610a4ab7463?w=300&h=450&fit=crop", videoUrl: "https://example.com/diehard.mp4" },
+                { title: "Terminator 2", year: "1991", rating: "8.5", poster: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&h=450&fit=crop", videoUrl: "https://example.com/terminator2.m3u" },
+                { title: "The Raid", year: "2011", rating: "7.6", poster: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=300&h=450&fit=crop", videoUrl: "https://example.com/raid.mp4" },
+                { title: "Mission Imp.", year: "2023", rating: "7.7", poster: "https://images.unsplash.com/photo-1517976487492-5750f3195933?w=300&h=450&fit=crop", videoUrl: "https://example.com/mission.mp4" },
+                { title: "Extraction", year: "2020", rating: "6.7", poster: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=450&fit=crop", videoUrl: "https://example.com/extraction.m3u" }
+            ]
+        };
+
+        function createMovieCard(movie) {
+            return `
+                <div class="movie-card" onclick="openInMXPlayer('${movie.videoUrl}', '${movie.title}')">
+                    <img src="${movie.poster}" alt="${movie.title}" class="movie-poster">
+                    <div class="movie-info">
+                        <div class="movie-title">${movie.title}</div>
+                        <div class="movie-meta">
+                            <span class="rating">★ ${movie.rating}</span>
+                            <span class="year">${movie.year}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openInMXPlayer(videoUrl, title) {
+            // MX Player intent URL oluştur
+            const mxPlayerUrl = `intent:${videoUrl}#Intent;package=com.mxtech.videoplayer.ad;S.title=${encodeURIComponent(title)};end`;
+            
+            // MX Player'ı aç
+            window.location.href = mxPlayerUrl;
+            
+            // Eğer MX Player yüklü değilse, alternatif olarak direkt video URL'ini aç
+            setTimeout(() => {
+                // Fallback: Eğer 2 saniye içinde açılmazsa, direkt video URL'ini aç
+                const fallbackUrl = videoUrl;
+                window.open(fallbackUrl, '_blank');
+            }, 2000);
+        }
+
+        function loadMovies() {
+            Object.keys(movies).forEach(category => {
+                const slider = document.getElementById(category);
+                slider.innerHTML = movies[category].map(createMovieCard).join('');
+            });
+        }
+
+        function scroll(sliderId, direction) {
+            const slider = document.getElementById(sliderId);
+            const scrollAmount = 300;
+            slider.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+
+        loadMovies();
+    </script>
+</body>
+</html>

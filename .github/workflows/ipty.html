@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV Kanal Seçici</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Avenir', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0e0b16;
+            min-height: 100vh;
+            color: #f9f9f9;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+            padding: 20px 40px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #f9f9f9;
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 40px 60px;
+        }
+
+        .search-box {
+            margin: 30px 0;
+        }
+
+        .search-box input {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 20px 12px 45px;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            background: #1a1a1a;
+            color: #f9f9f9;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>');
+            background-repeat: no-repeat;
+            background-position: 15px center;
+        }
+
+        .search-box input:focus {
+            background-color: #252525;
+            border-color: #3a3a3a;
+        }
+
+        .categories {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #2a2a2a transparent;
+        }
+
+        .categories::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .categories::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .categories::-webkit-scrollbar-thumb {
+            background: #2a2a2a;
+            border-radius: 3px;
+        }
+
+        .category-btn {
+            padding: 8px 20px;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            background: transparent;
+            color: #f9f9f9;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .category-btn:hover {
+            background: #1a1a1a;
+            border-color: #3a3a3a;
+        }
+
+        .category-btn.active {
+            background: #f9f9f9;
+            color: #0e0b16;
+            border-color: #f9f9f9;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #f9f9f9;
+            letter-spacing: -0.3px;
+        }
+
+        .slider-container {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .slider {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            padding: 4px 0 12px 0;
+        }
+
+        .slider::-webkit-scrollbar {
+            display: none;
+        }
+
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 45px;
+            height: 45px;
+            background: rgba(20, 20, 20, 0.95);
+            border: none;
+            border-radius: 50%;
+            color: #f9f9f9;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .slider-container:hover .slider-btn {
+            opacity: 1;
+        }
+
+        .slider-btn:hover {
+            background: rgba(40, 40, 40, 0.95);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .slider-btn.prev {
+            left: -22px;
+        }
+
+        .slider-btn.next {
+            right: -22px;
+        }
+
+        .featured-card {
+            min-width: 380px;
+            height: 210px;
+            border-radius: 6px;
+            background: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .featured-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .featured-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .featured-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .featured-card:hover .featured-overlay {
+            opacity: 1;
+        }
+
+        .featured-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f9f9f9;
+        }
+
+        /* Netflix Tarzı Dikey Film Kartları */
+        .movie-card {
+            min-width: 130px;
+            height: 195px;
+            border-radius: 4px;
+            background: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.5, 0, 0.1, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+            z-index: 20;
+        }
+
+        .movie-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: #3b82f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .movie-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .movie-card-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+            color: #666;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .movie-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+            padding: 12px 8px 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .movie-card:hover .movie-info {
+            opacity: 1;
+        }
+
+        .movie-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #f9f9f9;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .channel-card {
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            aspect-ratio: 16/9;
+            position: relative;
+        }
+
+        .channel-card:hover {
+            transform: scale(1.05);
+            border-color: rgba(249, 249, 249, 0.3);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .channel-card.selected {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+
+        .channel-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .channel-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #252525;
+            color: #f9f9f9;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .selected-count {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #3b82f6;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            z-index: 1000;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 16px;
+            }
+
+            .container {
+                padding: 0 16px 40px;
+            }
+
+            h1 {
+                font-size: 1.3rem;
+            }
+
+            .search-box {
+                margin: 20px 0;
+            }
+
+            .search-box input {
+                max-width: 100%;
+                font-size: 0.9rem;
+                padding: 10px 16px 10px 40px;
+            }
+
+            .categories {
+                gap: 8px;
+                margin-bottom: 30px;
+            }
+
+            .category-btn {
+                padding: 6px 14px;
+                font-size: 0.85rem;
+            }
+
+            .section-title {
+                font-size: 1.05rem;
+                margin-bottom: 12px;
+            }
+
+            .slider-container {
+                margin-bottom: 32px;
+            }
+
+            .slider {
+                gap: 6px;
+                padding: 4px 0 10px 0;
+            }
+
+            .featured-card {
+                min-width: 260px;
+                height: 145px;
+            }
+
+            .featured-overlay {
+                padding: 12px;
+            }
+
+            .featured-title {
+                font-size: 0.85rem;
+            }
+
+            .movie-card {
+                min-width: 105px;
+                height: 157px;
+            }
+
+            .movie-card.selected::after {
+                width: 20px;
+                height: 20px;
+                font-size: 12px;
+                top: 6px;
+                right: 6px;
+            }
+
+            .movie-info {
+                padding: 10px 6px 6px;
+            }
+
+            .movie-title {
+                font-size: 0.7rem;
+            }
+
+            .channels-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .channel-card {
+                border-radius: 6px;
+            }
+
+            .slider-btn {
+                display: none;
+            }
+
+            .selected-count {
+                bottom: 20px;
+                right: 16px;
+                padding: 10px 20px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .section-title {
+                font-size: 1rem;
+            }
+
+            .featured-card {
+                min-width: 240px;
+                height: 135px;
+            }
+
+            .movie-card {
+                min-width: 95px;
+                height: 142px;
+            }
+
+            .channels-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .selected-count {
+                bottom: 16px;
+                right: 12px;
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📺 IPTV</h1>
+    </div>
+
+    <div class="container">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Film, dizi veya kanal ara...">
+        </div>
+
+        <div class="categories">
+            <button class="category-btn active" data-category="all">Tümü</button>
+            <button class="category-btn" data-category="haber">Haber</button>
+            <button class="category-btn" data-category="eglence">Eğlence</button>
+            <button class="category-btn" data-category="spor">Spor</button>
+            <button class="category-btn" data-category="cocuk">Çocuk</button>
+            <button class="category-btn" data-category="belgesel">Belgesel</button>
+            <button class="category-btn" data-category="muzik">Müzik</button>
+        </div>
+
+        <div class="slider-container">
+            <h2 class="section-title">Öne Çıkanlar</h2>
+            <button class="slider-btn prev" onclick="scrollSlider('featured', -1)">‹</button>
+            <div class="slider" id="featuredSlider"></div>
+            <button class="slider-btn next" onclick="scrollSlider('featured', 1)">›</button>
+        </div>
+
+        <div class="slider-container">
+            <h2 class="section-title">Popüler Filmler</h2>
+            <button class="slider-btn prev" onclick="scrollSlider('movies', -1)">‹</button>
+            <div class="slider" id="moviesSlider"></div>
+            <button class="slider-btn next" onclick="scrollSlider('movies', 1)">›</button>
+        </div>
+
+        <div class="slider-container">
+            <h2 class="section-title">Spor Kanalları</h2>
+            <button class="slider-btn prev" onclick="scrollSlider('sports', -1)">‹</button>
+            <div class="slider" id="sportsSlider"></div>
+            <button class="slider-btn next" onclick="scrollSlider('sports', 1)">›</button>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Tüm Kanallar</h2>
+            <div class="channels-grid" id="channelsGrid"></div>
+        </div>
+    </div>
+
+    <div class="selected-count" id="selectedCount">
+        Seçilen: 0
+    </div>
+
+    <script>
+        const channels = [
+            { name: 'Sinema Aile', category: 'haber', icon: 'https://www.tvyayinakisi.com/wp-content/uploads/2020/05/sinemaaile.png', url: 'https://dsmartgo-live.ercdn.net/sinemaaile2/sinemaaile2_1080p.m3u8?st=jKMCisTG9dHqGnj6xsM7sw&e=1767039856&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=5e609a8e6b26df60dc76c3f2a2f9bcc3&tmode=1', featured: true, movie: true },
+            { name: 'Sinema Komedi', category: 'haber', icon: 'https://www.tvyayinakisi.com/wp-content/uploads/2020/05/sinema-komed.png', url: 'https://dsmartgo-live.ercdn.net/sinemaaile2/sinemaaile2_1080p.m3u8?st=365felHGV_ypGFC8YukREQ&e=1767039939&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=6a90b9edf617498c82d00cbb384f9ec0&tmode=1', featured: true, movie: true },
+            { name: 'BeinSeries2', category: 'haber', icon: 'https://www.tvlogolar.xyz/europa/turkey/bein-series-2.eno.png', url: 'https://kaleidoscopic-dieffenbachia-ad1198.netlify.app', featured: true, movie: true },
+            { name: 'Sinema 1001', category: 'spor', icon: 'https://www.tvyayinakisi.com/wp-content/uploads/2020/05/sinema-1001.png', url: 'https://dsmartgo-live.ercdn.net/sinema1001/sinema1001_1080p.m3u8?st=a2mTnbx3dwLDkgsvpIXWlQ&e=1767039955&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=a7625873aa7b2d643faf473e07e8542f&tmode=1', featured: true, movie: true },
+            { name: 'Film Screen HD', category: 'spor', icon: 'https://cosmobluemedia.com/wp-content/uploads/elementor/thumbs/film-screen-1-qgrlrm8vb8gjhoo4j5h6ctontf0f0n1yff1uhjsrci.png', url: 'https://dsmartgo-live.ercdn.net/filmbox/filmbox_1080p.m3u8?st=wPvcXU2ASV-RZLCv0lkmxg&e=1767039983&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=6f1f943cded18cc0de523b564819cb9b&tmode=1', featured: true, movie: true },
+            { name: 'FX HD', category: 'cocuk', icon: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/FX_International_logo.svg', url: 'https://dsmartgo-live.ercdn.net/fx/fx_1080p.m3u8?st=aK_Y4Cd3TdqiTZJuOTcXHw&e=1767040015&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=744599e413aeb71b6eeb1b66c5bcad27&tmode=1', movie: true },
+            { name: 'Dizismart Premium', category: 'belgesel', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/TRT_Belgesel_logo.svg/240px-TRT_Belgesel_logo.svg.png', url: 'https://dsmartgo-live.ercdn.net/dizismartpremium/dizismartpremium_1080p.m3u8?st=jfEw1IetBQRguc2appdC8Q&e=1767040042&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=70df63bc11c4d8f9fe93d3acf0286456&tmode=1', movie: true },
+            { name: 'Nat GEO HD', category: 'muzik', icon: 'https://account.nationalgeographic.com/media/national-geographic/media/National-Geographic-Logo.png', url: 'https://dsmartgo-live.ercdn.net/natgeo/natgeo_1080p.m3u8?st=3fBx_1C89bW4S1okg2V8oQ&e=1767040076&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=bd10dc5bcf3c5a6609d6a0879a90659c&tmode=1', movie: true },
+            { name: 'Spor Smart HD', category: 'eglence', icon: 'https://image.milimaj.com/i/milliyet/75/869x477/61013bfb86b24419fc684867.jpg', url: 'https://dsmartgo-live.ercdn.net/natgeo/natgeo_1080p.m3u8?st=3fBx_1C89bW4S1okg2V8oQ&e=1767040076&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=bd10dc5bcf3c5a6609d6a0879a90659c&tmode=1', sports: true },
+            { name: 'Disney JR HD', category: 'eglence', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/2024_Disney_Jr._Logo.svg/2560px-2024_Disney_Jr._Logo.svg.png', url: 'https://dsmartgo-live.ercdn.net/disneyjunior/disneyjunior_1080p.m3u8?st=Swyrex2LMzKMVZ5TKykcEw&e=1767040151&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=c34a3292aa05cf82dd67ed490bda6b29&tmode=1' },
+            { name: 'Çocuk Smart HD', category: 'haber', icon: 'https://dsmart-internet.com/i/dsmart/75/0x0/58f231a7f1a4aa14bc34dada.png', url: 'https://dsmartgo-live.ercdn.net/smartcocuk/smartcocuk_1080p.m3u8?st=59-xZWOKVhla-6rcs-r3iA&e=1767040191&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=b5d2b81c181e3ca06416576365653cfe&tmode=1' },
+            { name: 'Azoomee HD', category: 'belgesel', icon: 'https://play-lh.googleusercontent.com/QPk62ErkFF1o1OdlBoaHIBeQpswXVqDHs3HYgIYsrgcG05Tp7RVie0jQAfncSvV07w', url: 'https://dsmartgo-live.ercdn.net/fastfunbox/fastfunbox_1080p.m3u8?st=WGu6G-8bsKnEHTjg-B9miQ&e=1767040219&uid=7307739415362536717&sid=tADxGfwCCiB0pw&userid=&reqid=4f39a6604be4e2c4af7b58d21f0cefab&tmode=1' },
+            { name: 'Bein Sports 1', category: 'cocuk', icon: 'https://yt3.googleusercontent.com/_vs7K9u3pS-C7flO0cVIkxqgLsIkjElGL6izCYFzI0COAYKda5g2J9DRB9-EHsfTXwA_ayi72g=s900-c-k-c0x00ffffff-no-rj', url: 'https://dga1op10s1u3leo.38f3bb9511487c.click/live/selcukbeinsports2/playlist.m3u8', sports: true },
+            { name: 'Bein Sports 2', category: 'cocuk', icon: 'https://yt3.googleusercontent.com/_vs7K9u3pS-C7flO0cVIkxqgLsIkjElGL6izCYFzI0COAYKda5g2J9DRB9-EHsfTXwA_ayi72g=s900-c-k-c0x00ffffff-no-rj', url: 'https://dga1op10s1u3leo.38f3bb9511487c.click/live/selcukbeinsports2/playlist.m3u8', sports: true },
+            { name: 'S Sport 1', category: 'cocuk', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6HfF3oPPfgkmldl35JXnaVM0HDjrbVo3Jug&s', url: 'https://dga1op10s1u3leo.38f3bb9511487c.click/live/selcukbeinsports2/playlist.m3u8', sports: true },
+            { name: 'S Sport 2', category: 'haber', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6HfF3oPPfgkmldl35JXnaVM0HDjrbVo3Jug&s', url: 'https://dga1op10s1u3leo.38f3bb9511487c.click/live/selcukbeinsports2/playlist.m3u8', sports: true },
+            { name: 'Tivibu Spor HD', category: 'haber', icon: 'https://upload.wikimedia.org/wikipedia/tr/3/36/Tivibu_spor_logosu.jpg', url: 'https://dga1op10s1u3leo.38f3bb9511487c.click/live/selcukbeinsports2/playlist.m3u8', sports: true },
+        ];
+
+        let selectedChannels = new Set();
+        let currentCategory = 'all';
+
+        const channelsGrid = document.getElementById('channelsGrid');
+        const featuredSlider = document.getElementById('featuredSlider');
+        const moviesSlider = document.getElementById('moviesSlider');
+        const sportsSlider = document.getElementById('sportsSlider');
+        const selectedCount = document.getElementById('selectedCount');
+        const searchInput = document.getElementById('searchInput');
+
+        function scrollSlider(sliderId, direction) {
+            const slider = document.getElementById(sliderId + 'Slider');
+            const scrollAmount = 400;
+            slider.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+
+        function openInMXPlayer(streamUrl, channelName) {
+            const mxPlayerIntent = `intent:${streamUrl}#Intent;package=com.mxtech.videoplayer.ad;S.title=${encodeURIComponent(channelName)};end`;
+            window.location.href = mxPlayerIntent;
+            
+            setTimeout(() => {
+                const confirmOpen = confirm('MX Player yüklü değilse tarayıcıda açılsın mı?');
+                if (confirmOpen) {
+                    window.open(streamUrl, '_blank');
+                }
+            }, 1000);
+        }
+
+        function createMovieCard(channel) {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            if (selectedChannels.has(channel.name)) {
+                card.classList.add('selected');
+            }
+            
+            const img = document.createElement('img');
+            img.src = channel.icon;
+            img.alt = channel.name;
+            img.onerror = function() {
+                this.style.display = 'none';
+                const fallback = document.createElement('div');
+                fallback.className = 'movie-card-fallback';
+                fallback.textContent = channel.name.substring(0, 2).toUpperCase();
+                card.appendChild(fallback);
+            };
+            
+            const info = document.createElement('div');
+            info.className = 'movie-info';
+            info.innerHTML = `<div class="movie-title">${channel.name}</div>`;
+            
+            card.appendChild(img);
+            card.appendChild(info);
+            
+            card.addEventListener('click', () => {
+                if (selectedChannels.has(channel.name)) {
+                    selectedChannels.delete(channel.name);
+                    card.classList.remove('selected');
+                } else {
+                    selectedChannels.add(channel.name);
+                    card.classList.add('selected');
+                }
+                updateCount();
+                openInMXPlayer(channel.url, channel.name);
+            });
+            
+            return card;
+        }
+
+        function renderFeatured() {
+            featuredSlider.innerHTML = '';
+            const featured = channels.filter(ch => ch.featured);
+            
+            featured.forEach(channel => {
+                const card = document.createElement('div');
+                card.className = 'featured-card';
+                
+                const img = document.createElement('img');
+                img.src = channel.icon;
+                img.alt = channel.name;
+                img.onerror = function() {
+                    this.style.display = 'none';
+                    const fallback = document.createElement('div');
+                    fallback.className = 'channel-fallback';
+                    fallback.textContent = channel.name.substring(0, 2).toUpperCase();
+                    card.appendChild(fallback);
+                };
+                
+                card.appendChild(img);
+                
+                card.addEventListener('click', () => {
+                    if (selectedChannels.has(channel.name)) {
+                        selectedChannels.delete(channel.name);
+                        card.classList.remove('selected');
+                    } else {
+                        selectedChannels.add(channel.name);
+                        card.classList.add('selected');
+                    }
+                    updateCount();
+                    openInMXPlayer(channel.url, channel.name);
+                });
+                
+                channelsGrid.appendChild(card);
+            });
+        }
+
+        function updateCount() {
+            selectedCount.textContent = `Seçilen: ${selectedChannels.size}`;
+        }
+
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategory = btn.dataset.category;
+                renderChannels(searchInput.value);
+            });
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            renderChannels(e.target.value);
+        });
+
+        renderFeatured();
+        renderMovies();
+        renderSports();
+        renderChannels();
+    </script>
+</body>
+</html> channel.name;
+                
+                const overlay = document.createElement('div');
+                overlay.className = 'featured-overlay';
+                overlay.innerHTML = `<div class="featured-title">${channel.name}</div>`;
+                
+                card.appendChild(img);
+                card.appendChild(overlay);
+                
+                card.addEventListener('click', () => {
+                    if (selectedChannels.has(channel.name)) {
+                        selectedChannels.delete(channel.name);
+                    } else {
+                        selectedChannels.add(channel.name);
+                    }
+                    updateCount();
+                    openInMXPlayer(channel.url, channel.name);
+                });
+                
+                featuredSlider.appendChild(card);
+            });
+        }
+
+        function renderMovies() {
+            moviesSlider.innerHTML = '';
+            const movies = channels.filter(ch => ch.movie);
+            
+            movies.forEach(channel => {
+                moviesSlider.appendChild(createMovieCard(channel));
+            });
+        }
+
+        function renderSports() {
+            sportsSlider.innerHTML = '';
+            const sports = channels.filter(ch => ch.sports);
+            
+            sports.forEach(channel => {
+                sportsSlider.appendChild(createMovieCard(channel));
+            });
+        }
+
+        function renderChannels(filter = '') {
+            channelsGrid.innerHTML = '';
+            
+            const filtered = channels.filter(ch => {
+                const matchCategory = currentCategory === 'all' || ch.category === currentCategory;
+                const matchSearch = ch.name.toLowerCase().includes(filter.toLowerCase());
+                return matchCategory && matchSearch;
+            });
+
+            filtered.forEach((channel) => {
+                const card = document.createElement('div');
+                card.className = 'channel-card';
+                if (selectedChannels.has(channel.name)) {
+                    card.classList.add('selected');
+                }
+                
+                const img = document.createElement('img');
+                img.src = channel.icon;
+                img.alt =
